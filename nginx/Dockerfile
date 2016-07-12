@@ -2,6 +2,7 @@ FROM nginx:latest
 
 MAINTAINER Mahmoud Zalt <mahmoud@zalt.me>
 
+RUN rm /etc/nginx/conf.d/*
 ADD nginx.conf /etc/nginx/
 ADD laravel.conf /etc/nginx/sites-available/
 
