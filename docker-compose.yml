@@ -2,47 +2,12 @@ version: '2'
 
 services:
 
-### PHP-FPM Container #######################################
-
-    php-fpm:
-        build:
-            context: ./php-fpm
-            dockerfile: Dockerfile-70
-        volumes_from:
-            - application
-        expose:
-            - "9000"
-        links:
-            - workspace
-            - postgres
-            - redis
-
-### Laravel Application Code Container ######################
-
-    application:
-        build: ./application
-        volumes:
-            - ../:/var/www/laravel
-
-### Databases Data Container ################################
-
-    data:
-        build: ./data
-        volumes:
-            - ./var/lib/mysql:/var/lib/mysql
-            - ./var/lib/postgres:/var/lib/postgres
-            - ./var/lib/mariadb:/var/lib/mariadb
-            - ./var/lib/memcached:/var/lib/memcached
-            - ./var/lib/redis:/data
-            - ./var/lib/neo4j:/var/lib/neo4j/data
-            - ./var/lib/mongo:/data/db
-
 ### Nginx Server Container ##################################
 
     nginx:
         build: ./nginx
         volumes_from:
-            - application
+            - volumes_source
         volumes:
             - ./logs/nginx/:/var/log/nginx
         ports:
@@ -51,12 +16,27 @@ services:
         links:
             - php-fpm
 
+### PHP-FPM Container #######################################
+
+    php-fpm:
+        build:
+            context: ./php-fpm
+            dockerfile: Dockerfile-70
+        volumes_from:
+            - volumes_source
+        expose:
+            - "9000"
+        links:
+            - workspace
+            - redis
+            - postgres
+
 ### MySQL Container #########################################
 
     mysql:
         build: ./mysql
         volumes_from:
-            - data
+            - volumes_data
         ports:
             - "3306:3306"
         environment:
@@ -70,7 +50,7 @@ services:
     postgres:
         build: ./postgres
         volumes_from:
-            - data
+            - volumes_data
         ports:
             - "5432:5432"
         environment:
@@ -83,7 +63,7 @@ services:
     mariadb:
         build: ./mariadb
         volumes_from:
-            - data
+            - volumes_data
         ports:
             - "3306:3306"
         environment:
@@ -102,7 +82,7 @@ services:
         environment:
             - NEO4J_AUTH=homestead:secret
         volumes_from:
-            - data
+            - volumes_data
 
 ### MongoDB Container #######################################
 
@@ -111,14 +91,14 @@ services:
         ports:
             - "27017:27017"
         volumes_from:
-            - data
+            - volumes_data
 
 ### Redis Container #########################################
 
     redis:
         build: ./redis
         volumes_from:
-            - data
+            - volumes_data
         ports:
             - "6379:6379"
 
@@ -127,7 +107,7 @@ services:
     memcached:
         build: ./memcached
         volumes_from:
-            - data
+            - volumes_data
         ports:
             - "11211:11211"
         links:
@@ -158,11 +138,31 @@ services:
         build:
             context: ./workspace
             args:
-                INSTALL_PRESTISSIMO: ${INSTALL_PRESTISSIMO}
+                - INSTALL_PRESTISSIMO=false
         volumes_from:
-            - application
+            - volumes_source
         tty: true
         links:
             - postgres
+
+### Laravel Application Code Container ######################
+
+    volumes_source:
+        build: ./volumes/application
+        volumes:
+            - ../:/var/www/laravel
+
+### Databases Data Container ################################
+
+    volumes_data:
+        build: ./volumes/data
+        volumes:
+            - ./var/lib/mysql:/var/lib/mysql
+            - ./var/lib/postgres:/var/lib/postgres
+            - ./var/lib/mariadb:/var/lib/mariadb
+            - ./var/lib/memcached:/var/lib/memcached
+            - ./var/lib/redis:/data
+            - ./var/lib/neo4j:/var/lib/neo4j/data
+            - ./var/lib/mongo:/data/db
 
 ### Add more Containers below ###############################
