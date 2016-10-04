@@ -1,0 +1,40 @@
+version: '2'
+
+services:
+
+  nginx:
+    build: ./nginx
+    volumes_from:
+      - volumes_source
+    volumes:
+      - ./logs/nginx/:/var/log/nginx
+    ports:
+      - 80:80
+      - 443:443
+    links:
+      - php-fpm
+
+  php-fpm:
+    build:
+      context: ./php-fpm
+      dockerfile: Dockerfile-70
+    volumes_from:
+      - volumes_source
+    expose:
+      - 9000
+    links:
+      - workspace
+
+  workspace:
+    build:
+      context: ./workspace
+      args:
+        - INSTALL_PRESTISSIMO=false
+    volumes_from:
+      - volumes_source
+    tty: true
+
+  volumes_source:
+    build: ./volumes/application
+    volumes:
+      - ../:/var/www/laravel

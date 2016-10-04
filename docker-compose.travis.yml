@@ -1,0 +1,13 @@
+version: '2'
+
+services:
+
+  php-fpm:
+    extra_hosts:
+      - travis:172.17.0.1
+
+  workspace:
+    environment:
+      - DISABLE_NOTIFIER=true
+    extra_hosts:
+      - travis:172.17.0.1

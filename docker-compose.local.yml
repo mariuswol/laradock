@@ -1,0 +1,36 @@
+version: '2'
+
+services:
+
+  php-fpm:
+    links:
+      - redis
+      - postgres
+
+  postgres:
+    build: ./postgres
+    volumes_from:
+      - volumes_data
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: homestead
+      POSTGRES_USER: homestead
+      POSTGRES_PASSWORD: secret
+
+  redis:
+    build: ./redis
+    volumes_from:
+      - volumes_data
+    ports:
+      - 6379:6379
+
+  workspace:
+    links:
+      - postgres
+
+  volumes_data:
+    build: ./volumes/data
+    volumes:
+      - ./var/lib/postgres:/var/lib/postgres
+      - ./var/lib/redis:/data
